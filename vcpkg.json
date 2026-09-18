@@ -1,5 +1,7 @@
 {
     "name": "calcli",
     "version": "0.1.0",
-    "dependencies": []
+    "dependencies": [
+        "cli11"
+    ]
 }
