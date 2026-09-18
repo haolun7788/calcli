@@ -1,0 +1,10 @@
+build/
+.cache/
+vcpkg_installed/
+*.o
+*.exe
+
+# futureproofing for future updates
+credentials/
+*.json
+!vcpkg.json

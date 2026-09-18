@@ -1,0 +1,1 @@
+Simple C++ CLI for quick Google Calender entries. Work in Progress.
