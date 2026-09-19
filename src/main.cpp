@@ -1,6 +1,8 @@
 #include <CLI/CLI.hpp>
 #include <iostream>
 #include <string>
+#include <calcli/parser.hpp>
+#include <calcli/event.hpp>
 
 int main(int argc, char **argv) {
     CLI::App app{"calcli - fast Google Calender management"};
@@ -19,15 +21,18 @@ int main(int argc, char **argv) {
     CLI11_PARSE(app, argc, argv);
 
     if (*add_cmd) {
-        std::string when_str;
-        for (size_t i = 0; i < when_tokens.size(); ++i) {
-            if (i) when_str += " ";
-            when_str += when_tokens[i];
+        auto result = calcli::parse_when(when_tokens, std::chrono::system_clock::now());
+        if (!result) {
+            std::cerr << "Error: couldn't understand the date/time/duration. \n";
+            return 1;
         }
         std::cout << "Would add event: \"" << title << "\"\n"
-                  << "  when: \"" << when_str << "\"\n";
-        if (!location.empty())
-            std::cout << "  location: \"" << location << "\"\n";
+                  << " Start: " << std::chrono::floor<std::chrono::seconds>(result->start) << "\n"
+                  << " End: " << std::chrono::floor<std::chrono::seconds>(result->end) << "\n";
+        
+        if  (!location.empty()) {
+            std::cout << " Location: " << location << "\n";
+        }
     }
 
     return 0;
