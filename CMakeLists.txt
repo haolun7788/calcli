@@ -8,14 +8,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(CURL REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(httplib CONFIG REQUIRED)
 
-add_library(calcli_core src/parser.cpp src/event.cpp)
+add_library(calcli_core src/parser.cpp src/event.cpp src/curl_http_client.cpp src/auth.cpp src/util.cpp src/calendar_api.cpp)
 target_include_directories(calcli_core PUBLIC include)
 target_compile_features(calcli_core PUBLIC cxx_std_20)
 
 add_executable(calcli src/main.cpp)
 target_link_libraries(calcli PRIVATE CLI11::CLI11 calcli_core)
 target_link_libraries(calcli_core PUBLIC CURL::libcurl nlohmann_json::nlohmann_json)
+target_link_libraries(calcli_core PUBLIC httplib::httplib)
 
 enable_testing()
 add_subdirectory(tests)

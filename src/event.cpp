@@ -4,45 +4,45 @@
 #include <cstdio>
 #include <nlohmann/json.hpp>
 #include <calcli/event.hpp>
+#include <calcli/util.hpp>
 
 namespace calcli {
 
-    std::string format_rfc3339(std::chrono::system_clock::time_point tp) {
-        auto secs = std::chrono::floor<std::chrono::seconds>(tp);
-        auto days_part = std::chrono::floor<std::chrono::days>(secs);
-        std::chrono::year_month_day ymd{days_part};
-        std::chrono::hh_mm_ss hms{secs - days_part};
+    std::optional<std::chrono::system_clock::time_point> parse_rfc3339(const std::string& s) {
+        if (s.size() < 20) return std::nullopt;
 
-        char buf[32];
-        std::snprintf(buf, sizeof(buf), "%04d-%02u-%02uT%02lld:%02lld:%02lldZ",
-              int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()),
-              (long long)hms.hours().count(),
-              (long long)hms.minutes().count(),
-              (long long)hms.seconds().count());
-        return buf;
-    }
-
-    std::optional<std::chrono::system_clock::time_point> parse_rfc3339(const std::string &s) {
         int year, month, day, hour, minute, second;
-        // Strict: expects exactly "YYYY-MM-DDTHH:MM:SSZ" — good enough since it's
-        // parsing back what to_json produces; real API responses may vary
-        // (offsets instead of Z, fractional seconds) — a problem for later.
-        if (s.size() != 20 || s.back() != 'Z')
+        if (std::sscanf(s.c_str(), "%d-%d-%dT%d:%d:%d",
+                        &year, &month, &day, &hour, &minute, &second) != 6) {
             return std::nullopt;
-        if (std::sscanf(s.c_str(), "%d-%d-%dT%d:%d:%dZ",
-                        &year, &month, &day, &hour, &minute, &second) != 6)
-        {
+        }
+
+        std::string offset_part = s.substr(19);  // everything after "YYYY-MM-DDTHH:MM:SS"
+        if (!offset_part.empty() && offset_part[0] == '.') {
+            auto tz_start = offset_part.find_first_of("Z+-", 1);
+            if (tz_start == std::string::npos) return std::nullopt;
+            offset_part = offset_part.substr(tz_start);
+        }
+
+        int offset_minutes = 0;
+        if (offset_part == "Z") {
+            offset_minutes = 0;
+        } else if (offset_part.size() == 6 && (offset_part[0] == '+' || offset_part[0] == '-')) {
+            int oh, om;
+            if (std::sscanf(offset_part.c_str() + 1, "%d:%d", &oh, &om) != 2) return std::nullopt;
+            offset_minutes = (oh * 60 + om) * (offset_part[0] == '-' ? -1 : 1);
+        } else {
             return std::nullopt;
         }
 
         std::chrono::year_month_day ymd{std::chrono::year{year},
                                         std::chrono::month{unsigned(month)},
                                         std::chrono::day{unsigned(day)}};
-        if (!ymd.ok())
-            return std::nullopt; // rejects e.g. month=13, day=32
+        if (!ymd.ok()) return std::nullopt;
 
-        std::chrono::sys_days base{ymd};
-        return base + std::chrono::hours{hour} + std::chrono::minutes{minute} + std::chrono::seconds{second};
+        auto naive = std::chrono::sys_days{ymd} + std::chrono::hours{hour}
+                + std::chrono::minutes{minute} + std::chrono::seconds{second};
+        return naive - std::chrono::minutes{offset_minutes};  // shift to true UTC
     }
 
     std::string to_json(const Event& e) {
@@ -74,6 +74,7 @@ namespace calcli {
             Event e;
             e.summary = j["summary"];
             if (j.contains("location")) e.location = j["location"];
+            if (j.contains("id")) e.id = j["id"].get<std::string>();
             e.start = *start;
             e.end = *end;
             return e;

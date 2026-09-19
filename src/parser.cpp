@@ -1,8 +1,22 @@
 #include "calcli/parser.hpp"
 #include <cctype>
 #include <charconv>
+#include <ctime>
 
 namespace calcli {
+
+    std::chrono::system_clock::time_point local_to_utc(int year, int month, int day,int hour, int minute, int second) {
+        std::tm tm{};
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day;
+        tm.tm_hour = hour;
+        tm.tm_min = minute;
+        tm.tm_sec = second;
+        tm.tm_isdst = -1;  
+        std::time_t t = std::mktime(&tm);  // interprets tm as LOCAL time, returns UTC-based epoch
+        return std::chrono::system_clock::from_time_t(t);
+    }
 
     std::optional<std::chrono::weekday> parse_weekday(const std::string& token) {
         std::string lower_token = token;
@@ -96,7 +110,6 @@ namespace calcli {
             } else if (auto ct = parse_clock_time(token)) {
                 resolved_time = ct;
             } else if (pending_amount) {
-                // we're expecting a duration unit right after a number
                 resolved_duration = parse_duration(*pending_amount, token);
                 if (!resolved_duration) return std::nullopt;
                 pending_amount.reset();
@@ -112,8 +125,15 @@ namespace calcli {
         }
         
         resolved_time->first = (resolved_time->first < 12) ? resolved_time->first + 12 : resolved_time->first; // PM default
-        auto start = *resolved_date + std::chrono::hours{resolved_time->first} + std::chrono::minutes{resolved_time->second};
+        std::chrono::year_month_day ymd{*resolved_date};
+        int hour = resolved_time->first;
+        if (hour < 12) hour += 12;
+
+        auto start = local_to_utc(int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()),
+                                hour, resolved_time->second, 0);
         auto end = start + *resolved_duration;
+
+
         return ParsedWhen{start, end};
     }
 
