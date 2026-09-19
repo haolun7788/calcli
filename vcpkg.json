@@ -2,6 +2,7 @@
     "name": "calcli",
     "version": "0.1.0",
     "dependencies": [
-        "cli11"
+        "cli11",
+        "catch2"
     ]
 }
