@@ -6,21 +6,27 @@
 #include <optional>
 #include <chrono>
 
+struct CalendarInfo {
+    std::string id;
+    std::string summary;
+};
+
 namespace calcli {
 
-class CalendarApi {
-    public:
-        CalendarApi(AuthManager& auth, IHttpClient& http);
+    class CalendarApi {
+        public:
+            CalendarApi(AuthManager& auth, IHttpClient& http);
 
-        std::optional<Event> create_event(const std::string& calendar_id, const Event& e);
-        std::optional<std::vector<Event>> list_events(const std::string& calendar_id,
-                                                    std::chrono::system_clock::time_point from,
-                                                    std::chrono::system_clock::time_point to);
-        bool delete_event(const std::string& calendar_id, const std::string& event_id);
+            std::optional<Event> create_event(const std::string& calendar_id, const Event& e);
+            std::optional<std::vector<CalendarInfo>> list_calendars();
+            std::optional<std::vector<Event>> list_events(const std::string& calendar_id,
+                                                        std::chrono::system_clock::time_point from,
+                                                        std::chrono::system_clock::time_point to);
+            bool delete_event(const std::string& calendar_id, const std::string& event_id);
 
-    private:
-        AuthManager& auth_;
-        IHttpClient& http_;
-        std::vector<std::string> auth_headers();
+        private:
+            AuthManager& auth_;
+            IHttpClient& http_;
+            std::vector<std::string> auth_headers();
     };
 } // namespace calcli

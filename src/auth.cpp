@@ -81,7 +81,9 @@ namespace calcli {
     TokenSet AuthManager::run_consent_flow() {
         const std::string redirect_uri = "http://localhost:8080/callback";
         const std::string state = random_state();
-        const std::string scope = "https://www.googleapis.com/auth/calendar.events";
+        const std::string scope = "https://www.googleapis.com/auth/calendar.events" 
+                                " https://www.googleapis.com/auth/calendar.readonly";
+        
 
         std::string auth_url =
             "https://accounts.google.com/o/oauth2/v2/auth"
@@ -115,8 +117,7 @@ namespace calcli {
         return exchange_code_for_tokens(received_code, redirect_uri);
     }
 
-    TokenSet AuthManager::exchange_code_for_tokens(const std::string& code,
-                                                    const std::string& redirect_uri) {
+    TokenSet AuthManager::exchange_code_for_tokens(const std::string& code, const std::string& redirect_uri) {
         std::string body =
             "code=" + url_encode(code) +
             "&client_id=" + url_encode(creds_.client_id) +

@@ -22,6 +22,23 @@ namespace calcli {
         return from_json(resp.body);
     }
 
+    std::optional<std::vector<CalendarInfo>> CalendarApi::list_calendars() {
+        auto resp = http_.get("https://www.googleapis.com/calendar/v3/users/me/calendarList",
+                            auth_headers());
+        if (resp.status_code != 200) return std::nullopt;
+
+        try {
+            auto j = nlohmann::json::parse(resp.body);
+            std::vector<CalendarInfo> calendars;
+            for (const auto& item : j.at("items")) {
+                calendars.push_back({item.value("id", ""), item.value("summary", "")});
+            }
+            return calendars;
+        } catch (const nlohmann::json::exception&) {
+            return std::nullopt;
+        }
+    }
+
     std::optional<std::vector<Event>> CalendarApi::list_events(
             const std::string& calendar_id,
             std::chrono::system_clock::time_point from,

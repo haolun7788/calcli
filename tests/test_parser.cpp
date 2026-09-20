@@ -11,6 +11,20 @@ namespace {
     system_clock::time_point fixed_now() {
         return sys_days{2026y / September / 16} + hours{10};
     }
+ 
+    // Force UTC timezone
+    struct ForceUtcTimezone {
+    ForceUtcTimezone() {
+    #if defined(_WIN32)
+            _putenv_s("TZ", "UTC");
+            _tzset();
+    #else
+            setenv("TZ", "UTC", 1);
+            tzset();
+    #endif
+        }
+    };
+    ForceUtcTimezone force_utc_once;
 } // namespace
 
 TEST_CASE("weekday -> parse_weekday", "[parser]") {
