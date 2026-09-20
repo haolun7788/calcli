@@ -3,8 +3,7 @@
 <a href="https://github.com/haolun7788/calcli/releases" target="_blank">
   <img src="https://img.shields.io/badge/version-0.1.0-purple">
 </a>
-<a href="https://github.com/haolun7788/calcli" target="_blank">
-  <img src="https://img.shields.io/badge/github-repo-blue?logo=github">
+<a href="https://github.com/haolun7788/calcli/actions/workflows/release.yml" target="_blank"> <img src="https://github.com/haolun7788/calcli/actions/workflows/release.yml/badge.svg"> 
 </a>
 <a href="https://github.com/haolun7788/calcli/blob/main/LICENSE" target="_blank">
   <img src="https://img.shields.io/badge/license-MIT-green">
