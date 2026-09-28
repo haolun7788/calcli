@@ -120,9 +120,16 @@ namespace calcli {
             }
         }
 
-        if (!resolved_date || !resolved_time || !resolved_duration) {
-            return std::nullopt;
+        if (!resolved_date) return std::nullopt;
+        if (pending_amount) return std::nullopt;   // a number with no unit, e.g. "friday 5"
+
+        // Deadline shorthand: a bare weekday means 10:59 PM - 11:59 PM
+        if (!resolved_time && !resolved_duration) {
+            resolved_time = std::make_pair(22, 59);
+            resolved_duration = std::chrono::minutes{60};
         }
+
+        if (!resolved_time || !resolved_duration) return std::nullopt;
         
         resolved_time->first = (resolved_time->first < 12) ? resolved_time->first + 12 : resolved_time->first; // PM default
         std::chrono::year_month_day ymd{*resolved_date};

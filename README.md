@@ -1,7 +1,7 @@
 # calcli
 
 <a href="https://github.com/haolun7788/calcli/releases" target="_blank">
-  <img src="https://img.shields.io/badge/version-0.1.0-purple">
+  <img src="https://img.shields.io/badge/version-v0.2.0-purple">
 </a>
 <a href="https://github.com/haolun7788/calcli/actions/workflows/release.yml" target="_blank"> <img src="https://github.com/haolun7788/calcli/actions/workflows/release.yml/badge.svg"> 
 </a>
@@ -20,7 +20,8 @@ Created event: 013u9h5m06i8ptfgujatreif50
 
 ## Features
 
-- **Natural-language event creation** — `calcli add "<title>" <weekday> <time> <amount> <unit> [--location X] [--calendar NAME]`
+- **Natural-language event creation** — `calcli add "<title>" <weekday> [<time> <amount> <unit>] [--location X] [--calendar NAME]`
+- **Deadline shorthand** — give just a weekday (`calcli add "Problem set 4" friday`) and the event defaults to 10:59 PM – 11:59 PM that day
 - **Custom date/time parser** — no third-party NLP date library; a small hand-written parser resolves weekday names, bare times (defaulting to PM), and durations in minutes/hours/days
 - **Real OAuth2 from scratch** — the authorization-code flow (browser consent screen, local loopback callback server, token exchange, silent refresh) is implemented directly against Google's OAuth endpoints using `libcurl` and `cpp-httplib`, with no dependency on Google's official client SDKs
 - **Calendar selection** — a persistent config file supports a default calendar plus named aliases, so `-c school` can stand in for a long calendar ID
@@ -31,7 +32,7 @@ Created event: 013u9h5m06i8ptfgujatreif50
 
 | Command | Description |
 |---|---|
-| `calcli add "<title>" <weekday> <time> <amount> <unit> [--location/-l X] [--calendar/-c NAME]` | Create an event |
+| `calcli add "<title>" <weekday> [<time> <amount> <unit>] [--location/-l X] [--calendar/-c NAME]` | Create an event (time and duration are optional; a bare weekday defaults to 10:59 PM – 11:59 PM) |
 | `calcli auth login` | Authenticate with Google (opens a browser) |
 | `calcli auth status` | Show whether credentials are currently cached |
 | `calcli auth logout` | Remove cached credentials |
@@ -43,14 +44,20 @@ Created event: 013u9h5m06i8ptfgujatreif50
 ### Date/time syntax
 
 ```
-<weekday> <H:MM> <amount> <hour|hours|minute|minutes|day|days>
+<weekday> [<H:MM> <amount> <hour|hours|minute|minutes|day|days>]
 ```
 
 - Weekday names are case-insensitive; if the named day is today, it resolves to today, otherwise the next upcoming occurrence
 - A bare time like `2:30` (no am/pm) defaults to **PM**
-- Duration is required — e.g. `1 hour`, `30 minutes`, `2 hours`
+- If you give a time, a duration is required — e.g. `1 hour`, `30 minutes`, `2 hours`
+- **Deadline shorthand:** give just a weekday and the event defaults to **10:59 PM – 11:59 PM** that day
 
-Example: `calcli add "Essay draft" wednesday 9:00 45 minutes`
+Examples:
+
+```
+calcli add "Essay draft" wednesday 9:00 45 minutes
+calcli add "Problem set 4" friday
+```
 
 ## Architecture
 
@@ -120,18 +127,17 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Unit tests cover the date/time parser (weekday resolution, PM-default handling, week-wraparound, malformed-input rejection) using a mocked HTTP layer where relevant, no real network calls or Google account needed to run the suite. The test binary pins its timezone to UTC internally so results are deterministic across machines.
+Unit tests cover the date/time parser (weekday resolution, PM-default handling, week-wraparound, deadline default, malformed-input rejection), no real network calls or Google account needed to run the suite. The test binary pins its timezone to UTC internally so results are deterministic across machines.
 
 ## Limitations (current scope)
 
 - `add` only creates events - editing and deleting via the CLI aren't wired up yet (the underlying API client supports it internally)
-- Date/time input requires an explicit weekday, time, and duration — no "tomorrow", relative offsets ("in 3 days"), or recurring events **yet**
+- Date/time input requires an explicit weekday (optionally followed by a time and duration) — no "tomorrow", relative offsets ("in 3 days"), or recurring events **yet**
 - One event per invocation; no bulk/batch import
 - Static-binary builds and testing have only been done on Windows/MSVC so far
 
 ## Roadmap
 
-- GitHub Actions CI (build + test + publish releases on tag push)
 - `calcli list` / `calcli delete` — expose the API client's existing list/delete support as commands
 - `--desc`, `--all-day`, `--reminder` flags
 - Relative date parsing ("tomorrow", "in 3 days")

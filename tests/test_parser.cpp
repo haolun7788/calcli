@@ -93,3 +93,16 @@ TEST_CASE("missing duration is rejected", "[parser]") {
     auto result = parse_when({"friday", "2:30"}, fixed_now());
     REQUIRE_FALSE(result.has_value());
 }
+
+TEST_CASE("bare weekday defaults to 10:59 PM - 11:59 PM", "[parser]") {
+    auto result = parse_when({"friday"}, fixed_now());
+    REQUIRE(result.has_value());
+
+    auto expected_start = sys_days{2026y / September / 18} + hours{22} + minutes{59};
+    REQUIRE(result->start == expected_start);
+    REQUIRE(result->end == expected_start + hours{1});
+}
+
+TEST_CASE("dangling number without a unit is rejected", "[parser]") {
+    REQUIRE_FALSE(parse_when({"friday", "5"}, fixed_now()).has_value());
+}

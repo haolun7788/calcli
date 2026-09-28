@@ -66,7 +66,7 @@ namespace {
 
 int main(int argc, char **argv) {
     CLI::App app{"calcli - fast Google Calender management"};
-    app.set_version_flag("--version", "calcli 0.1.0");
+    app.set_version_flag("--version", "calcli v0.2.0");
     app.require_subcommand(1);
 
     std::string title;
@@ -84,7 +84,9 @@ int main(int argc, char **argv) {
 
     auto* add_cmd = app.add_subcommand("add", "Add new event");
     add_cmd->add_option("title", title, "Event title")->required();
-    add_cmd->add_option("when", when_tokens,"Natural-language day/time/duration, e.g. friday 2:30 1 hour")->required();
+    add_cmd->add_option("when", when_tokens,
+    "Day, optionally with time and duration (e.g. friday 2:30 1 hour). "
+    "A day alone defaults to 10:59pm-11:59pm.")->required();
     add_cmd->add_option("--location,-l", location, "Event location");
     add_cmd->add_option("--calendar,-c", calendar_arg, "Calendar name/alias or ID");
 
